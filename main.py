@@ -1,6 +1,8 @@
+import sys
 import cv2
 from ultralytics import YOLO
 import numpy as np
+from PyQt5 import QtWidgets, QtGui, QtCore
 
 # Load the pre-trained YOLOv10 model
 model = YOLO("res/models/yolov10n.pt")
@@ -11,6 +13,28 @@ vehicle_classes = ["car", "truck", "bus", "motorbike"]
 # Paths to the four video files
 video_paths = ["video.mp4", "video2.webm", "video3.webm", "video4.webm"]
 caps = [cv2.VideoCapture(f"res/videos/{path}") for path in video_paths]
+
+# Create a PyQt application
+app = QtWidgets.QApplication(sys.argv)
+
+# Create a PyQt window for displaying vehicle counts
+count_window = QtWidgets.QWidget()
+count_window.setWindowTitle("Vehicle Counts")
+count_window.setGeometry(100, 100, 400, 200)
+count_layout = QtWidgets.QGridLayout()
+
+# Create labels for each feed and add them to the grid layout
+vehicle_count_labels = []
+background_colors = ["red"] * 4  # Default background colors (all red)
+
+for i in range(4):
+    label = QtWidgets.QLabel(f"Feed {i + 1}: 0 vehicles")
+    label.setStyleSheet(f"background-color: {background_colors[i]}; color: white; padding: 10px;")
+    vehicle_count_labels.append(label)
+    count_layout.addWidget(label, i // 2, i % 2)  # Place in a 2x2 grid
+
+count_window.setLayout(count_layout)
+count_window.show()
 
 # Create an OpenCV window and resize it
 window_name = "4 Video Feeds with Vehicle Detection"
@@ -27,6 +51,7 @@ frame_counts = [0, 0, 0, 0]
 while all(cap.isOpened() for cap in caps):
     frames = []
     vehicles_detected = False  # Flag to check if any vehicle is detected
+    num_vehicles_list = [0] * 4  # Initialize with zero for each feed
 
     # Read frames from each video file
     for i, cap in enumerate(caps):
@@ -47,6 +72,7 @@ while all(cap.isOpened() for cap in caps):
 
             # Count the number of vehicles detected
             num_vehicles = len(vehicle_detections)
+            num_vehicles_list[i] = num_vehicles  # Store the count for this feed
             if num_vehicles > 0:
                 vehicles_detected = True  # Set flag if vehicle detected
 
@@ -67,6 +93,20 @@ while all(cap.isOpened() for cap in caps):
     # If any video ended, stop
     if len(frames) < 4:
         break
+
+    # Determine the feed with the maximum vehicles detected
+    max_vehicles = max(num_vehicles_list) if num_vehicles_list else 0
+    for i in range(4):
+        if num_vehicles_list[i] == max_vehicles and num_vehicles_list[i] > 0:
+            background_colors[i] = "green"  # Set to green if it's the max
+        elif num_vehicles_list[i] == 0:
+            continue  # Keep the same color if no vehicles detected
+        else:
+            background_colors[i] = "red"  # Otherwise, set to red
+
+        # Update the label with the vehicle count and the background color
+        vehicle_count_labels[i].setText(f"Feed {i + 1}: {num_vehicles_list[i]} vehicles")
+        vehicle_count_labels[i].setStyleSheet(f"background-color: {background_colors[i]}; color: white; padding: 10px;")
 
     # Resize each frame to fit a quadrant
     height, width = frames[0].shape[:2]
@@ -106,3 +146,5 @@ for cap in caps:
 
 # Close OpenCV windows
 cv2.destroyAllWindows()
+# Exit the PyQt application
+sys.exit(app.exec_())
