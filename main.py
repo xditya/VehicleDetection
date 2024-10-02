@@ -11,7 +11,7 @@ model = YOLO("res/models/yolov10n.pt")
 vehicle_classes = ["car", "truck", "bus", "motorbike"]
 
 # Paths to the four video files
-video_paths = ["video.mp4", "video2.webm", "video3.webm", "video4.webm"]
+video_paths = ["video2.webm", "video5.webm", "video3.webm", "video4.webm"]
 caps = [cv2.VideoCapture(f"res/videos/{path}") for path in video_paths]
 
 # Create a PyQt application
