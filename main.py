@@ -4,7 +4,7 @@ from ultralytics import YOLO
 import numpy as np
 from PyQt5 import QtWidgets, QtGui, QtCore
 
-model = YOLO("res/models/yolov10n.pt")
+model = YOLO("res/models/yolo11n.pt")
 
 vehicle_classes = ["car", "truck", "bus", "motorbike"]
 
